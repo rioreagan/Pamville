@@ -31,10 +31,6 @@
           <span>Call: <a href="tel:+256708880086">+256 708 880 086</a> | <a href="tel:+256753630128">+256 753 630 128</a></span>
         </div>
         <div class="top-bar-item">
-          <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
-          <span>WhatsApp: <a href="https://wa.me/256708880086" target="_blank" style="color: #25d366; font-weight: 700;">Chat Administrator</a></span>
-        </div>
-        <div class="top-bar-item">
           <i class="fa-regular fa-clock"></i>
           <span>Opening: 8:00 AM - 5:00 PM</span>
         </div>
@@ -617,11 +613,11 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label" for="contact-name">Full Name</label>
-                <input class="form-input" type="text" id="contact-name" name="name" required placeholder="John Doe">
+                <input class="form-input" type="text" id="contact-name" name="name" required placeholder="Rio Reagan">
               </div>
               <div class="form-group">
                 <label class="form-label" for="contact-email">Email Address</label>
-                <input class="form-input" type="email" id="contact-email" name="email" required placeholder="john@example.com">
+                <input class="form-input" type="email" id="contact-email" name="email" required placeholder="rioregan13212@gmail.com">
               </div>
               <div class="form-group full-width">
                 <label class="form-label" for="contact-subject">Subject</label>
@@ -664,14 +660,6 @@
                 <p>pamvilleschoolsnsangi@gmail.com / info@pamville.ac.ug</p>
               </div>
             </div>
-            
-            <a href="https://wa.me/256708880086" target="_blank" class="detail-item" style="color: inherit; transition: var(--transition-fast);">
-              <div class="detail-icon" style="background-color: rgba(37, 211, 102, 0.1); color: #25d366;"><i class="fa-brands fa-whatsapp"></i></div>
-              <div class="detail-info">
-                <h4>WhatsApp Chat</h4>
-                <p style="text-decoration: underline; color: #25d366; font-weight: 700;">Chat with Administrator</p>
-              </div>
-            </a>
           </div>
           
           <!-- Real GPS Google Map -->
@@ -771,7 +759,7 @@
             <h4 style="font-family:'Plus Jakarta Sans'; font-size:1.15rem; font-weight:700;">Student Information</h4>
             <div class="form-group">
               <label class="form-label" for="student-name">Student's Full Name</label>
-              <input class="form-input" type="text" id="student-name" required placeholder="Alex Doe">
+              <input class="form-input" type="text" id="student-name" required placeholder="Kwikiriza Joseph">
             </div>
             <div class="form-group">
               <label class="form-label" for="student-dob">Date of Birth</label>
@@ -787,73 +775,14 @@
                 <option value="primary-upper">Primary Upper (P4 - P7)</option>
               </select>
             </div>
-            <!-- Specific Class Dropdown -->
-            <div class="form-group">
-              <label class="form-label" for="student-class">Specific Class</label>
-              <select class="form-input" id="student-class" required>
-                <option value="" disabled selected>Select Specific Class</option>
-                <option value="baby-class">Baby Class (Daycare)</option>
-                <option value="middle-class">Middle Class (Nursery)</option>
-                <option value="top-class">Top Class (Pre-School)</option>
-                <option value="p1">Primary One (P.1)</option>
-                <option value="p2">Primary Two (P.2)</option>
-                <option value="p3">Primary Three (P.3)</option>
-                <option value="p4">Primary Four (P.4)</option>
-                <option value="p5">Primary Five (P.5)</option>
-                <option value="p6">Primary Six (P.6)</option>
-                <option value="p7">Primary Seven (P.7)</option>
-              </select>
-            </div>
-            <!-- Enrollment Type (Day/Boarding) -->
-            <div class="form-group">
-              <label class="form-label" for="student-status">Enrollment Type</label>
-              <select class="form-input" id="student-status" required>
-                <option value="" disabled selected>Select Day or Boarding</option>
-                <option value="day">Day Scholar</option>
-                <option value="boarding">Boarding Section</option>
-              </select>
-            </div>
-            <!-- Student Residence Location -->
-            <div class="form-group">
-              <label class="form-label" for="student-location">Exact Residential Location (Town/Village)</label>
-              <input class="form-input" type="text" id="student-location" required placeholder="e.g. Nsangi Town, Kyengera, Maya">
-            </div>
-            <!-- Student Photo Upload -->
-            <div class="form-group">
-              <label class="form-label" for="student-image">Student's Photo</label>
-              <div class="image-upload-container">
-                <input type="file" id="student-image" accept="image/*" style="display: none;" required>
-                <div class="image-upload-dropzone" id="student-image-dropzone">
-                  <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
-                  <span class="dropzone-text">Click or drag photo here to upload</span>
-                  <span class="dropzone-subtext">Supports PNG, JPG, JPEG (Max 5MB)</span>
-                </div>
-                <div class="image-preview-wrapper" id="student-image-preview-wrapper" style="display: none;">
-                  <img id="student-image-preview" src="" alt="Student Preview">
-                  <button type="button" class="btn-remove-image" id="btn-remove-student-image">&times;</button>
-                </div>
-              </div>
-            </div>
           </div>
           
           <!-- Step 2: Parent/Guardian Info -->
           <div class="form-step" id="step-2">
             <h4 style="font-family:'Plus Jakarta Sans'; font-size:1.15rem; font-weight:700;">Parent / Guardian Details</h4>
             <div class="form-group">
-              <label class="form-label" for="parent-name">Parent's / Immediate Guardian's Full Name</label>
-              <input class="form-input" type="text" id="parent-name" required placeholder="John Doe">
-            </div>
-            <!-- Relationship to Student -->
-            <div class="form-group">
-              <label class="form-label" for="parent-relationship">Relationship to Student</label>
-              <select class="form-input" id="parent-relationship" required>
-                <option value="" disabled selected>Select Relationship</option>
-                <option value="mother">Mother</option>
-                <option value="father">Father</option>
-                <option value="guardian-male">Guardian (Male)</option>
-                <option value="guardian-female">Guardian (Female)</option>
-                <option value="other">Other Relative</option>
-              </select>
+              <label class="form-label" for="parent-name">Parent's Full Name</label>
+              <input class="form-input" type="text" id="parent-name" required placeholder="Kiyoumba Paul">
             </div>
             <div class="form-group">
               <label class="form-label" for="parent-phone">Contact Phone Number</label>
@@ -861,53 +790,21 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="parent-email">Email Address</label>
-              <input class="form-input" type="email" id="parent-email" required placeholder="john@example.com">
-            </div>
-            <!-- Referral Source -->
-            <div class="form-group">
-              <label class="form-label" for="referral-source">How did you find our website?</label>
-              <select class="form-input" id="referral-source" required>
-                <option value="" disabled selected>Select an option</option>
-                <option value="google">Google / Search Engine</option>
-                <option value="social-media">Social Media (Facebook, Instagram, TikTok, etc.)</option>
-                <option value="friends-family">Recommended by Friends / Family</option>
-                <option value="flyer-brochure">Flyer / Brochure</option>
-                <option value="other">Other</option>
-              </select>
+              <input class="form-input" type="email" id="parent-email" required placeholder="kiyoumbapaul@gmail.com">
             </div>
           </div>
           
           <!-- Step 3: Review and Submit -->
           <div class="form-step" id="step-3">
             <h4 style="font-family:'Plus Jakarta Sans'; font-size:1.15rem; font-weight:700;">Review Application</h4>
-            <p style="font-size:0.95rem; color:var(--text-muted); margin-bottom: 0.75rem;">Please review the provided information before finalizing your enrollment application. Admissions committee will review submissions and contact you within 3 business days.</p>
-            
-            <!-- Reassurance about Professional Staff -->
-            <div class="staff-reassurance-card" style="background: rgba(13, 148, 136, 0.05); border-left: 4px solid var(--accent); padding: 1rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin-bottom: 1rem; font-size: 0.85rem;">
-              <h5 style="color: var(--primary); font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; font-family:'Plus Jakarta Sans';">
-                <i class="fa-solid fa-user-shield"></i> Safe, Professional & Responsible Staff
-              </h5>
-              <p style="color: var(--text-muted); margin: 0; line-height: 1.4;">
-                Pamville is staffed with highly qualified, certified educators. All staff undergo rigorous screening, background verification, and routine safety trainings including Child Protection and First Aid to deliver care of the highest professional standard.
-              </p>
-            </div>
-
+            <p style="font-size:0.95rem; color:var(--text-muted);">Please review the provided information before finalizing your enrollment application. Admissions committee will review submissions and contact you within 3 business days.</p>
             <div style="background-color:var(--bg-primary); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-light); font-size:0.9rem; display:flex; flex-direction:column; gap:0.5rem;">
               <div><strong>Student Name:</strong> <span id="review-student-name">-</span></div>
               <div><strong>Desired Level:</strong> <span id="review-student-level">-</span></div>
-              <div><strong>Specific Class:</strong> <span id="review-student-class">-</span></div>
-              <div><strong>Enrollment Type:</strong> <span id="review-student-status">-</span></div>
-              <div><strong>Student Location:</strong> <span id="review-student-location">-</span></div>
-              <div><strong>Student Photo:</strong> <span id="review-student-image-name">None</span></div>
-              <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
-                <img id="review-student-image-preview" src="" alt="Photo Preview" style="display: none; width: 60px; height: 60px; border-radius: var(--radius-md); object-fit: cover; border: 1px solid var(--border-light);">
-              </div>
-              <div><strong>Parent/Guardian:</strong> <span id="review-parent-name">-</span></div>
-              <div><strong>Relationship:</strong> <span id="review-parent-relationship">-</span></div>
+              <div><strong>Parent Name:</strong> <span id="review-parent-name">-</span></div>
               <div><strong>Parent Email:</strong> <span id="review-parent-email">-</span></div>
-              <div><strong>Referral Source:</strong> <span id="review-referral-source">-</span></div>
             </div>
-            <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.75rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
               <input type="checkbox" id="terms-agree" required>
               <label for="terms-agree" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">I certify that the information provided is accurate and correct.</label>
             </div>
@@ -995,12 +892,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Floating WhatsApp Chat Widget -->
-  <a href="https://wa.me/256708880086" class="floating-whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chat with Administrator on WhatsApp">
-    <i class="fa-brands fa-whatsapp"></i>
-    <span>Chat with us</span>
-  </a>
 
   <!-- Custom JavaScript -->
   <script src="app.js"></script>
