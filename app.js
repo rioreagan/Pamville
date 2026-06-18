@@ -314,6 +314,88 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // 10. Multi-step Admissions Apply Form
   // ==========================================
+  // ==========================================
+  // Image Upload Helper
+  // ==========================================
+  const initImageUpload = (modalContainer) => {
+    const fileInput = modalContainer.querySelector('#student-image');
+    const dropzone = modalContainer.querySelector('#student-image-dropzone');
+    const previewWrapper = modalContainer.querySelector('#student-image-preview-wrapper');
+    const previewImg = modalContainer.querySelector('#student-image-preview');
+
+    if (!fileInput || !dropzone || !previewWrapper || !previewImg) return;
+
+    // Click to trigger file input
+    dropzone.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    // Handle file select
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    // Drag-and-drop events
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length > 0) {
+        fileInput.files = files; // Assign files to input
+        handleFiles(files);
+      }
+    }, false);
+
+    function handleFiles(files) {
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            previewWrapper.style.display = 'block';
+            dropzone.style.display = 'none';
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert('Please select an image file (PNG, JPG, JPEG).');
+          fileInput.value = '';
+        }
+      }
+    }
+
+    // Remove button
+    const removeBtn = modalContainer.querySelector('#btn-remove-student-image');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.value = '';
+        previewImg.src = '';
+        previewWrapper.style.display = 'none';
+        dropzone.style.display = 'flex';
+      });
+    }
+  };
+
+  // ==========================================
+  // 10. Multi-step Admissions Apply Form
+  // ==========================================
   const applyForm = document.getElementById('apply-form');
   const formSteps = document.querySelectorAll('.form-step');
   const stepIndicators = document.querySelectorAll('.modal-step-indicator');
@@ -321,6 +403,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const applyNextBtn = document.getElementById('apply-next-btn');
   
   let currentStep = 1;
+
+  // Initialize image upload for initial modal HTML
+  initImageUpload(applyModal);
 
   const updateStepUI = () => {
     const currentFormSteps = applyModal.querySelectorAll('.form-step');
@@ -361,8 +446,38 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('review-student-name').textContent = document.getElementById('student-name').value;
       const gradeSelect = document.getElementById('student-grade');
       document.getElementById('review-student-level').textContent = gradeSelect.options[gradeSelect.selectedIndex].text;
+      
+      const classSelect = document.getElementById('student-class');
+      document.getElementById('review-student-class').textContent = classSelect.options[classSelect.selectedIndex].text;
+      const statusSelect = document.getElementById('student-status');
+      document.getElementById('review-student-status').textContent = statusSelect.options[statusSelect.selectedIndex].text;
+      document.getElementById('review-student-location').textContent = document.getElementById('student-location').value;
+      
       document.getElementById('review-parent-name').textContent = document.getElementById('parent-name').value;
+      const relSelect = document.getElementById('parent-relationship');
+      document.getElementById('review-parent-relationship').textContent = relSelect.options[relSelect.selectedIndex].text;
       document.getElementById('review-parent-email').textContent = document.getElementById('parent-email').value;
+
+      // Referral
+      const referralSelect = document.getElementById('referral-source');
+      document.getElementById('review-referral-source').textContent = referralSelect ? referralSelect.options[referralSelect.selectedIndex].text : '';
+
+      // Photo
+      const photoInput = document.getElementById('student-image');
+      if (photoInput && photoInput.files && photoInput.files[0]) {
+        const file = photoInput.files[0];
+        document.getElementById('review-student-image-name').textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const imgPreview = document.getElementById('review-student-image-preview');
+          imgPreview.src = e.target.result;
+          imgPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        document.getElementById('review-student-image-name').textContent = 'None';
+        document.getElementById('review-student-image-preview').style.display = 'none';
+      }
     } else {
       if (currentApplyNextBtn) currentApplyNextBtn.textContent = 'Next Step';
     }
@@ -376,11 +491,27 @@ document.addEventListener('DOMContentLoaded', () => {
     activeInputs.forEach(input => {
       if (!input.value) {
         isValid = false;
-        input.style.borderColor = 'red';
-        input.addEventListener('input', function removeBorder() {
-          input.style.borderColor = '';
-          input.removeEventListener('input', removeBorder);
-        });
+        if (input.type === 'file') {
+          const dropzone = applyModal.querySelector('#student-image-dropzone');
+          if (dropzone) {
+            dropzone.style.borderColor = 'red';
+            const clearDropzoneBorder = () => {
+              dropzone.style.borderColor = '';
+              input.removeEventListener('change', clearDropzoneBorder);
+            };
+            input.addEventListener('change', clearDropzoneBorder);
+          }
+        } else {
+          input.style.borderColor = 'red';
+          const removeBorder = () => {
+            input.style.borderColor = '';
+            input.removeEventListener('input', removeBorder);
+          };
+          input.addEventListener('input', removeBorder);
+          if (input.tagName === 'SELECT') {
+            input.addEventListener('change', removeBorder);
+          }
+        }
       }
     });
     
@@ -415,42 +546,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const sDob = document.getElementById('student-dob')?.value || '';
     const sGradeEl = document.getElementById('student-grade');
     const sGrade = sGradeEl ? sGradeEl.options[sGradeEl.selectedIndex].text : '';
+    
+    const sClassEl = document.getElementById('student-class');
+    const sClass = sClassEl ? sClassEl.options[sClassEl.selectedIndex].text : '';
+    const sStatusEl = document.getElementById('student-status');
+    const sStatus = sStatusEl ? sStatusEl.options[sStatusEl.selectedIndex].text : '';
+    const sLocation = document.getElementById('student-location')?.value || '';
+
     const pName = document.getElementById('parent-name')?.value || '';
+    const pRelEl = document.getElementById('parent-relationship');
+    const pRel = pRelEl ? pRelEl.options[pRelEl.selectedIndex].text : '';
     const pPhone = document.getElementById('parent-phone')?.value || '';
     const pEmail = document.getElementById('parent-email')?.value || '';
 
-    // Generate mailto link
-    const emailSubject = encodeURIComponent(`Admissions Application: ${sName} (${sGrade})`);
-    const emailBody = encodeURIComponent(
-      `PAMVILLE SCHOOLS NSANGI - ADMISSION APPLICATION\n\n` +
+    // Get referral
+    const referralSelect = document.getElementById('referral-source');
+    const referral = referralSelect ? referralSelect.options[referralSelect.selectedIndex].text : 'Not provided';
+
+    // Get photo filename
+    const photoInput = document.getElementById('student-image');
+    const photoName = photoInput && photoInput.files && photoInput.files[0] ? photoInput.files[0].name : 'Not provided';
+
+    const rawSubject = `Admissions Application: ${sName} (${sClass} - ${sStatus})`;
+    const rawBody = `PAMVILLE SCHOOLS NSANGI - ADMISSION APPLICATION\n\n` +
       `Student Details:\n` +
       `- Student's Full Name: ${sName}\n` +
       `- Date of Birth: ${sDob}\n` +
-      `- Desired Level: ${sGrade}\n\n` +
+      `- Desired Grade Level: ${sGrade}\n` +
+      `- Specific Class: ${sClass}\n` +
+      `- Day or Boarding: ${sStatus}\n` +
+      `- Exact Residential Location: ${sLocation}\n` +
+      `- Student Photo File Name: ${photoName}\n` +
+      `  (IMPORTANT: Please attach the photo file "${photoName}" to this email draft before sending.)\n\n` +
       `Parent/Guardian Details:\n` +
-      `- Parent's Full Name: ${pName}\n` +
+      `- Parent/Guardian Full Name: ${pName}\n` +
+      `- Relationship to Student: ${pRel}\n` +
       `- Contact Phone: ${pPhone}\n` +
-      `- Email Address: ${pEmail}\n`
-    );
-    const mailtoLink = `mailto:pamvilleschoolsnsangi@gmail.com,info@pamville.ac.ug,rioreagan13212@gmail.com?subject=${emailSubject}&body=${emailBody}`;
+      `- Email Address: ${pEmail}\n` +
+      `- Referral Source (How they found website): ${referral}\n\n` +
+      `Note: Reassurance banner displayed: "Pamville is staffed with highly qualified, certified educators. All staff undergo rigorous screening, background verification, and routine safety trainings including Child Protection and First Aid to deliver care of the highest professional standard."`;
 
-    // Generate WhatsApp link
-    const waText = encodeURIComponent(
-      `*PAMVILLE SCHOOLS NSANGI - ADMISSION APPLICATION*\n\n` +
-      `*Student Details:*\n` +
-      `• Student's Full Name: ${sName}\n` +
-      `• Date of Birth: ${sDob}\n` +
-      `• Desired Level: ${sGrade}\n\n` +
-      `*Parent/Guardian Details:*\n` +
-      `• Parent's Full Name: ${pName}\n` +
-      `• Contact Phone: ${pPhone}\n` +
-      `• Email Address: ${pEmail}`
-    );
-    const waLink = `https://wa.me/256708880086?text=${waText}`;
+    const emailSubject = encodeURIComponent(rawSubject);
+    const emailBody = encodeURIComponent(rawBody);
+    const recipients = "pamvilleschoolsnsangi@gmail.com,info@pamville.ac.ug,rioreagan13212@gmail.com";
 
-    // Automatically dispatch messages on both sides
-    window.open(waLink, '_blank');
-    window.location.href = mailtoLink;
+    const mailtoLink = `mailto:${recipients}?subject=${emailSubject}&body=${emailBody}`;
+    const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipients}&su=${emailSubject}&body=${emailBody}`;
+    const outlookLink = `https://outlook.live.com/mail/0/deeplink/compose?to=${recipients}&subject=${emailSubject}&body=${emailBody}`;
+    const yahooLink = `https://compose.mail.yahoo.com/?to=${recipients}&subj=${emailSubject}&body=${emailBody}`;
 
     const modalBody = applyModal.querySelector('.modal-body');
     const modalFooter = applyModal.querySelector('.modal-footer');
@@ -458,19 +601,32 @@ document.addEventListener('DOMContentLoaded', () => {
     modalBody.innerHTML = `
       <div class="success-screen" style="text-align: center; display: flex; flex-direction: column; gap: 1rem; align-items: center;">
         <div class="success-icon" style="color: var(--secondary); font-size: 3rem;"><i class="fa-solid fa-circle-check"></i></div>
-        <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 700;">Application Submitted!</h4>
-        <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 400px; margin: 0 auto;">We have automatically opened WhatsApp and your default Email client to send the details. If they did not launch, please click below to send them manually:</p>
+        <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 700;">Application Details Ready!</h4>
+        <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 450px; margin: 0 auto;">Select your preferred email provider below to open the draft. (Remember to attach the student's photo file to the email before sending!)</p>
         
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; width: 100%;">
-          <a href="${waLink}" target="_blank" class="btn btn-secondary" style="background-color: #25d366; border-color: #25d366; color: white; display: flex; align-items: center; gap: 0.5rem; justify-content: center; flex: 1; min-width: 160px; font-weight: 600; padding: 0.75rem 1rem;">
-            <i class="fa-brands fa-whatsapp"></i> Send via WhatsApp
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%; margin-top: 0.5rem;">
+          <a href="${gmailLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #ea4335; color: #ea4335;">
+            <i class="fa-brands fa-google"></i> Gmail (Web)
           </a>
-          <a href="${mailtoLink}" target="_blank" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; flex: 1; min-width: 160px; font-weight: 600; padding: 0.75rem 1rem;">
-            <i class="fa-regular fa-envelope"></i> Send via Email
+          <a href="${outlookLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #0078d4; color: #0078d4;">
+            <i class="fa-regular fa-envelope"></i> Outlook (Web)
+          </a>
+          <a href="${yahooLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #6001d2; color: #6001d2;">
+            <i class="fa-brands fa-yahoo"></i> Yahoo Mail (Web)
+          </a>
+          <a href="${mailtoLink}" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-desktop"></i> Default Mail App
           </a>
         </div>
         
-        <button class="btn btn-outline" id="btn-close-apply-success" style="margin-top: 1rem; width: 100%;">Close & Return</button>
+        <div style="width: 100%; border-top: 1px solid var(--border-light); padding-top: 1rem; margin-top: 0.5rem;">
+          <button class="btn btn-outline" id="btn-copy-application-data" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 1rem; font-size: 0.9rem;">
+            <i class="fa-solid fa-copy"></i> Copy Email Details to Clipboard
+          </button>
+          <div id="copy-feedback" style="display: none; font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-top: 0.25rem;">Copied successfully! You can paste this in your email.</div>
+        </div>
+        
+        <button class="btn btn-outline" id="btn-close-apply-success" style="margin-top: 0.5rem; width: 100%;">Close & Return</button>
       </div>
     `;
     
@@ -478,6 +634,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('btn-close-apply-success').addEventListener('click', () => {
       closeModal(applyModal);
+    });
+
+    document.getElementById('btn-copy-application-data').addEventListener('click', () => {
+      const copyText = `To: ${recipients}\nSubject: ${rawSubject}\n\n${rawBody}`;
+      navigator.clipboard.writeText(copyText).then(() => {
+        const feedback = document.getElementById('copy-feedback');
+        if (feedback) {
+          feedback.style.display = 'block';
+          setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+        }
+      }).catch(err => {
+        alert('Failed to copy text. Please select and copy manually.');
+      });
     });
   };
 
@@ -508,8 +677,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <label class="form-label" for="student-dob">Date of Birth</label>
               <input class="form-input" type="date" id="student-dob" required>
             </div>
-             <div class="form-group">
-              <label class="form-label" for="student-grade">Desired Level</label>
+            <div class="form-group">
+              <label class="form-label" for="student-grade">Desired Grade Level</label>
               <select class="form-input" id="student-grade" required>
                 <option value="" disabled selected>Select Level/Grade</option>
                 <option value="daycare">Daycare (Babies)</option>
@@ -518,13 +687,72 @@ document.addEventListener('DOMContentLoaded', () => {
                 <option value="primary-upper">Primary Upper (P4 - P7)</option>
               </select>
             </div>
+            <!-- Specific Class Dropdown -->
+            <div class="form-group">
+              <label class="form-label" for="student-class">Specific Class</label>
+              <select class="form-input" id="student-class" required>
+                <option value="" disabled selected>Select Specific Class</option>
+                <option value="baby-class">Baby Class (Daycare)</option>
+                <option value="middle-class">Middle Class (Nursery)</option>
+                <option value="top-class">Top Class (Pre-School)</option>
+                <option value="p1">Primary One (P.1)</option>
+                <option value="p2">Primary Two (P.2)</option>
+                <option value="p3">Primary Three (P.3)</option>
+                <option value="p4">Primary Four (P.4)</option>
+                <option value="p5">Primary Five (P.5)</option>
+                <option value="p6">Primary Six (P.6)</option>
+                <option value="p7">Primary Seven (P.7)</option>
+              </select>
+            </div>
+            <!-- Enrollment Type (Day/Boarding) -->
+            <div class="form-group">
+              <label class="form-label" for="student-status">Enrollment Type</label>
+              <select class="form-input" id="student-status" required>
+                <option value="" disabled selected>Select Day or Boarding</option>
+                <option value="day">Day Scholar</option>
+                <option value="boarding">Boarding Section</option>
+              </select>
+            </div>
+            <!-- Student Residence Location -->
+            <div class="form-group">
+              <label class="form-label" for="student-location">Exact Residential Location (Town/Village)</label>
+              <input class="form-input" type="text" id="student-location" required placeholder="e.g. Nsangi Town, Kyengera, Maya">
+            </div>
+            <!-- Student Photo Upload -->
+            <div class="form-group">
+              <label class="form-label" for="student-image">Student's Photo</label>
+              <div class="image-upload-container">
+                <input type="file" id="student-image" accept="image/*" style="display: none;" required>
+                <div class="image-upload-dropzone" id="student-image-dropzone">
+                  <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                  <span class="dropzone-text">Click or drag photo here to upload</span>
+                  <span class="dropzone-subtext">Supports PNG, JPG, JPEG (Max 5MB)</span>
+                </div>
+                <div class="image-preview-wrapper" id="student-image-preview-wrapper" style="display: none;">
+                  <img id="student-image-preview" src="" alt="Student Preview">
+                  <button type="button" class="btn-remove-image" id="btn-remove-student-image">&times;</button>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div class="form-step" id="step-2">
             <h4 style="font-family:'Plus Jakarta Sans'; font-size:1.15rem; font-weight:700;">Parent / Guardian Details</h4>
             <div class="form-group">
-              <label class="form-label" for="parent-name">Parent's Full Name</label>
+              <label class="form-label" for="parent-name">Parent's / Immediate Guardian's Full Name</label>
               <input class="form-input" type="text" id="parent-name" required placeholder="John Doe">
+            </div>
+            <!-- Relationship to Student -->
+            <div class="form-group">
+              <label class="form-label" for="parent-relationship">Relationship to Student</label>
+              <select class="form-input" id="parent-relationship" required>
+                <option value="" disabled selected>Select Relationship</option>
+                <option value="mother">Mother</option>
+                <option value="father">Father</option>
+                <option value="guardian-male">Guardian (Male)</option>
+                <option value="guardian-female">Guardian (Female)</option>
+                <option value="other">Other Relative</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label" for="parent-phone">Contact Phone Number</label>
@@ -534,18 +762,50 @@ document.addEventListener('DOMContentLoaded', () => {
               <label class="form-label" for="parent-email">Email Address</label>
               <input class="form-input" type="email" id="parent-email" required placeholder="john@example.com">
             </div>
+            <!-- Referral Source -->
+            <div class="form-group">
+              <label class="form-label" for="referral-source">How did you find our website?</label>
+              <select class="form-input" id="referral-source" required>
+                <option value="" disabled selected>Select an option</option>
+                <option value="google">Google / Search Engine</option>
+                <option value="social-media">Social Media (Facebook, Instagram, TikTok, etc.)</option>
+                <option value="friends-family">Recommended by Friends / Family</option>
+                <option value="flyer-brochure">Flyer / Brochure</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
           </div>
           
           <div class="form-step" id="step-3">
             <h4 style="font-family:'Plus Jakarta Sans'; font-size:1.15rem; font-weight:700;">Review Application</h4>
-            <p style="font-size:0.95rem; color:var(--text-muted);">Please review the provided information before finalizing your enrollment application. Admissions committee will review submissions and contact you within 3 business days.</p>
+            <p style="font-size:0.95rem; color:var(--text-muted); margin-bottom: 0.75rem;">Please review the provided information before finalizing your enrollment application. Admissions committee will review submissions and contact you within 3 business days.</p>
+            
+            <!-- Reassurance about Professional Staff -->
+            <div class="staff-reassurance-card" style="background: rgba(13, 148, 136, 0.05); border-left: 4px solid var(--accent); padding: 1rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin-bottom: 1rem; font-size: 0.85rem;">
+              <h5 style="color: var(--primary); font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; font-family:'Plus Jakarta Sans';">
+                <i class="fa-solid fa-user-shield"></i> Safe, Professional & Responsible Staff
+              </h5>
+              <p style="color: var(--text-muted); margin: 0; line-height: 1.4;">
+                Pamville is staffed with highly qualified, certified educators. All staff undergo rigorous screening, background verification, and routine safety trainings including Child Protection and First Aid to deliver care of the highest professional standard.
+              </p>
+            </div>
+
             <div style="background-color:var(--bg-primary); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-light); font-size:0.9rem; display:flex; flex-direction:column; gap:0.5rem;">
               <div><strong>Student Name:</strong> <span id="review-student-name">-</span></div>
               <div><strong>Desired Level:</strong> <span id="review-student-level">-</span></div>
-              <div><strong>Parent Name:</strong> <span id="review-parent-name">-</span></div>
+              <div><strong>Specific Class:</strong> <span id="review-student-class">-</span></div>
+              <div><strong>Enrollment Type:</strong> <span id="review-student-status">-</span></div>
+              <div><strong>Student Location:</strong> <span id="review-student-location">-</span></div>
+              <div><strong>Student Photo:</strong> <span id="review-student-image-name">None</span></div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                <img id="review-student-image-preview" src="" alt="Photo Preview" style="display: none; width: 60px; height: 60px; border-radius: var(--radius-md); object-fit: cover; border: 1px solid var(--border-light);">
+              </div>
+              <div><strong>Parent/Guardian:</strong> <span id="review-parent-name">-</span></div>
+              <div><strong>Relationship:</strong> <span id="review-parent-relationship">-</span></div>
               <div><strong>Parent Email:</strong> <span id="review-parent-email">-</span></div>
+              <div><strong>Referral Source:</strong> <span id="review-referral-source">-</span></div>
             </div>
-            <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.75rem;">
               <input type="checkbox" id="terms-agree" required>
               <label for="terms-agree" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">I certify that the information provided is accurate and correct.</label>
             </div>
@@ -561,6 +821,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Re-bind listeners
     document.getElementById('close-apply-modal').addEventListener('click', () => closeModal(applyModal));
     
+    // Initialize image upload for this newly reset modal
+    initImageUpload(applyModal);
+
     // Re-assign form DOM variables
     const newApplyForm = document.getElementById('apply-form');
     const newFormSteps = document.querySelectorAll('.form-step');
@@ -628,8 +891,38 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('review-student-name').textContent = document.getElementById('student-name').value;
         const gradeSelect = document.getElementById('student-grade');
         document.getElementById('review-student-level').textContent = gradeSelect.options[gradeSelect.selectedIndex].text;
+        
+        const classSelect = document.getElementById('student-class');
+        document.getElementById('review-student-class').textContent = classSelect.options[classSelect.selectedIndex].text;
+        const statusSelect = document.getElementById('student-status');
+        document.getElementById('review-student-status').textContent = statusSelect.options[statusSelect.selectedIndex].text;
+        document.getElementById('review-student-location').textContent = document.getElementById('student-location').value;
+
         document.getElementById('review-parent-name').textContent = document.getElementById('parent-name').value;
+        const relSelect = document.getElementById('parent-relationship');
+        document.getElementById('review-parent-relationship').textContent = relSelect.options[relSelect.selectedIndex].text;
         document.getElementById('review-parent-email').textContent = document.getElementById('parent-email').value;
+
+        // Referral
+        const referralSelect = document.getElementById('referral-source');
+        document.getElementById('review-referral-source').textContent = referralSelect ? referralSelect.options[referralSelect.selectedIndex].text : '';
+
+        // Photo
+        const photoInput = document.getElementById('student-image');
+        if (photoInput && photoInput.files && photoInput.files[0]) {
+          const file = photoInput.files[0];
+          document.getElementById('review-student-image-name').textContent = file.name;
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const imgPreview = document.getElementById('review-student-image-preview');
+            imgPreview.src = e.target.result;
+            imgPreview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        } else {
+          document.getElementById('review-student-image-name').textContent = 'None';
+          document.getElementById('review-student-image-preview').style.display = 'none';
+        }
       } else {
         newApplyNextBtn.textContent = 'Next Step';
       }
@@ -668,32 +961,23 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const handleVisitSubmit = (visitorName, visitorEmail, date, time) => {
-    const emailSubject = encodeURIComponent(`School Tour Booking: ${visitorName}`);
-    const emailBody = encodeURIComponent(
-      `PAMVILLE SCHOOLS NSANGI - CAMPUS TOUR BOOKING\n\n` +
+    const rawSubject = `School Tour Booking: ${visitorName}`;
+    const rawBody = `PAMVILLE SCHOOLS NSANGI - CAMPUS TOUR BOOKING\n\n` +
       `Visitor Details:\n` +
       `- Full Name: ${visitorName}\n` +
       `- Email Address: ${visitorEmail}\n\n` +
       `Tour Schedule:\n` +
       `- Date: ${date}\n` +
-      `- Time Slot: ${time}\n`
-    );
-    const mailtoLink = `mailto:pamvilleschoolsnsangi@gmail.com,info@pamville.ac.ug,rioreagan13212@gmail.com?subject=${emailSubject}&body=${emailBody}`;
+      `- Time Slot: ${time}\n`;
 
-    const waText = encodeURIComponent(
-      `*PAMVILLE SCHOOLS NSANGI - CAMPUS TOUR BOOKING*\n\n` +
-      `*Visitor Details:*\n` +
-      `• Full Name: ${visitorName}\n` +
-      `• Email Address: ${visitorEmail}\n\n` +
-      `*Tour Schedule:*\n` +
-      `• Date: ${date}\n` +
-      `• Time Slot: ${time}`
-    );
-    const waLink = `https://wa.me/256708880086?text=${waText}`;
+    const emailSubject = encodeURIComponent(rawSubject);
+    const emailBody = encodeURIComponent(rawBody);
+    const recipients = "pamvilleschoolsnsangi@gmail.com,info@pamville.ac.ug,rioreagan13212@gmail.com";
 
-    // Automatically dispatch messages on both sides
-    window.open(waLink, '_blank');
-    window.location.href = mailtoLink;
+    const mailtoLink = `mailto:${recipients}?subject=${emailSubject}&body=${emailBody}`;
+    const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipients}&su=${emailSubject}&body=${emailBody}`;
+    const outlookLink = `https://outlook.live.com/mail/0/deeplink/compose?to=${recipients}&subject=${emailSubject}&body=${emailBody}`;
+    const yahooLink = `https://compose.mail.yahoo.com/?to=${recipients}&subj=${emailSubject}&body=${emailBody}`;
 
     const modalBody = visitModal.querySelector('.modal-body');
     const modalFooter = visitModal.querySelector('.modal-footer');
@@ -701,19 +985,32 @@ document.addEventListener('DOMContentLoaded', () => {
     modalBody.innerHTML = `
       <div class="success-screen" style="text-align: center; display: flex; flex-direction: column; gap: 1rem; align-items: center;">
         <div class="success-icon" style="color: var(--secondary); font-size: 3rem;"><i class="fa-solid fa-calendar-check"></i></div>
-        <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 700;">Tour Booking Submitted!</h4>
-        <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 400px; margin: 0 auto;">We have automatically opened WhatsApp and your default Email client to send the booking details. If they did not launch, please click below to send them manually:</p>
+        <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 700;">Tour Booking Details Ready!</h4>
+        <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 450px; margin: 0 auto;">Select your preferred email provider below to open the draft:</p>
         
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; width: 100%;">
-          <a href="${waLink}" target="_blank" class="btn btn-secondary" style="background-color: #25d366; border-color: #25d366; color: white; display: flex; align-items: center; gap: 0.5rem; justify-content: center; flex: 1; min-width: 160px; font-weight: 600; padding: 0.75rem 1rem;">
-            <i class="fa-brands fa-whatsapp"></i> Send via WhatsApp
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%; margin-top: 0.5rem;">
+          <a href="${gmailLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #ea4335; color: #ea4335;">
+            <i class="fa-brands fa-google"></i> Gmail (Web)
           </a>
-          <a href="${mailtoLink}" target="_blank" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; flex: 1; min-width: 160px; font-weight: 600; padding: 0.75rem 1rem;">
-            <i class="fa-regular fa-envelope"></i> Send via Email
+          <a href="${outlookLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #0078d4; color: #0078d4;">
+            <i class="fa-regular fa-envelope"></i> Outlook (Web)
+          </a>
+          <a href="${yahooLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #6001d2; color: #6001d2;">
+            <i class="fa-brands fa-yahoo"></i> Yahoo Mail (Web)
+          </a>
+          <a href="${mailtoLink}" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-desktop"></i> Default Mail App
           </a>
         </div>
         
-        <button class="btn btn-outline" id="btn-close-visit-success" style="margin-top: 1rem; width: 100%;">Close & Return</button>
+        <div style="width: 100%; border-top: 1px solid var(--border-light); padding-top: 1rem; margin-top: 0.5rem;">
+          <button class="btn btn-outline" id="btn-copy-visit-data" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 1rem; font-size: 0.9rem;">
+            <i class="fa-solid fa-copy"></i> Copy Booking Details to Clipboard
+          </button>
+          <div id="copy-visit-feedback" style="display: none; font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-top: 0.25rem;">Copied successfully! You can paste this in your email.</div>
+        </div>
+        
+        <button class="btn btn-outline" id="btn-close-visit-success" style="margin-top: 0.5rem; width: 100%;">Close & Return</button>
       </div>
     `;
 
@@ -721,6 +1018,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-close-visit-success').addEventListener('click', () => {
       closeModal(visitModal);
+    });
+
+    document.getElementById('btn-copy-visit-data').addEventListener('click', () => {
+      const copyText = `To: ${recipients}\nSubject: ${rawSubject}\n\n${rawBody}`;
+      navigator.clipboard.writeText(copyText).then(() => {
+        const feedback = document.getElementById('copy-visit-feedback');
+        if (feedback) {
+          feedback.style.display = 'block';
+          setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+        }
+      }).catch(err => {
+        alert('Failed to copy text. Please select and copy manually.');
+      });
     });
   };
 
@@ -888,53 +1198,68 @@ document.addEventListener('DOMContentLoaded', () => {
       const subject = document.getElementById('contact-subject').value;
       const message = document.getElementById('contact-message').value;
 
-      // Generate mailto link
-      const emailSubject = encodeURIComponent(`Inquiry from Website: ${subject}`);
-      const emailBody = encodeURIComponent(
-        `PAMVILLE SCHOOLS NSANGI - WEBSITE CONTACT INQUIRY\n\n` +
+      const rawSubject = `Inquiry from Website: ${subject}`;
+      const rawBody = `PAMVILLE SCHOOLS NSANGI - WEBSITE CONTACT INQUIRY\n\n` +
         `Sender Details:\n` +
         `- Name: ${visitorName}\n` +
         `- Email Address: ${visitorEmail}\n\n` +
         `Inquiry Details:\n` +
         `- Subject: ${subject}\n` +
-        `- Message:\n${message}\n`
-      );
-      const mailtoLink = `mailto:pamvilleschoolsnsangi@gmail.com,info@pamville.ac.ug,rioreagan13212@gmail.com?subject=${emailSubject}&body=${emailBody}`;
+        `- Message:\n${message}\n`;
 
-      // Generate WhatsApp link
-      const waText = encodeURIComponent(
-        `*PAMVILLE SCHOOLS NSANGI - WEBSITE CONTACT INQUIRY*\n\n` +
-        `*Sender Details:*\n` +
-        `• Name: ${visitorName}\n` +
-        `• Email Address: ${visitorEmail}\n\n` +
-        `*Inquiry Details:*\n` +
-        `• Subject: ${subject}\n` +
-        `• Message: ${message}`
-      );
-      const waLink = `https://wa.me/256708880086?text=${waText}`;
+      const emailSubject = encodeURIComponent(rawSubject);
+      const emailBody = encodeURIComponent(rawBody);
+      const recipients = "pamvilleschoolsnsangi@gmail.com,info@pamville.ac.ug,rioreagan13212@gmail.com";
 
-      // Automatically dispatch messages on both sides
-      window.open(waLink, '_blank');
-      window.location.href = mailtoLink;
+      const mailtoLink = `mailto:${recipients}?subject=${emailSubject}&body=${emailBody}`;
+      const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipients}&su=${emailSubject}&body=${emailBody}`;
+      const outlookLink = `https://outlook.live.com/mail/0/deeplink/compose?to=${recipients}&subject=${emailSubject}&body=${emailBody}`;
+      const yahooLink = `https://compose.mail.yahoo.com/?to=${recipients}&subj=${emailSubject}&body=${emailBody}`;
 
       // Highlight success and give action options in place of form
       const contactCard = contactForm.closest('.contact-card');
       contactCard.innerHTML = `
         <div class="success-screen" style="padding: 1rem 0; text-align: center; display: flex; flex-direction: column; gap: 1rem; align-items: center;">
           <div class="success-icon" style="width: 60px; height: 60px; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; color: var(--secondary); background-color: rgba(37, 99, 235, 0.1); border-radius: 50%;"><i class="fa-solid fa-circle-check"></i></div>
-          <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">Inquiry Submitted!</h4>
-          <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 400px; margin: 0 auto 0.5rem auto;">We have automatically opened WhatsApp and your default Email client to send your message. If they did not launch, please click below to send them manually:</p>
+          <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">Inquiry Details Ready!</h4>
+          <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 450px; margin: 0 auto 0.5rem auto;">Select your preferred email provider below to open the draft:</p>
           
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; width: 100%;">
-            <a href="${waLink}" target="_blank" class="btn btn-secondary" style="background-color: #25d366; border-color: #25d366; color: white; display: flex; align-items: center; gap: 0.5rem; justify-content: center; flex: 1; min-width: 150px; font-weight: 600; padding: 0.65rem 1rem; font-size: 0.9rem;">
-              <i class="fa-brands fa-whatsapp"></i> Send via WhatsApp
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%; margin-top: 0.5rem;">
+            <a href="${gmailLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #ea4335; color: #ea4335;">
+              <i class="fa-brands fa-google"></i> Gmail (Web)
             </a>
-            <a href="${mailtoLink}" target="_blank" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; flex: 1; min-width: 150px; font-weight: 600; padding: 0.65rem 1rem; font-size: 0.9rem;">
-              <i class="fa-regular fa-envelope"></i> Send via Email
+            <a href="${outlookLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #0078d4; color: #0078d4;">
+              <i class="fa-regular fa-envelope"></i> Outlook (Web)
             </a>
+            <a href="${yahooLink}" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem; border-color: #6001d2; color: #6001d2;">
+              <i class="fa-brands fa-yahoo"></i> Yahoo Mail (Web)
+            </a>
+            <a href="${mailtoLink}" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 0.5rem; font-size: 0.85rem;">
+              <i class="fa-solid fa-desktop"></i> Default Mail App
+            </a>
+          </div>
+          
+          <div style="width: 100%; border-top: 1px solid var(--border-light); padding-top: 1rem; margin-top: 0.5rem;">
+            <button class="btn btn-outline" id="btn-copy-contact-data" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 600; padding: 0.65rem 1rem; font-size: 0.9rem;">
+              <i class="fa-solid fa-copy"></i> Copy Inquiry Details to Clipboard
+            </button>
+            <div id="copy-contact-feedback" style="display: none; font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-top: 0.25rem;">Copied successfully! You can paste this in your email.</div>
           </div>
         </div>
       `;
+
+      document.getElementById('btn-copy-contact-data').addEventListener('click', () => {
+        const copyText = `To: ${recipients}\nSubject: ${rawSubject}\n\n${rawBody}`;
+        navigator.clipboard.writeText(copyText).then(() => {
+          const feedback = document.getElementById('copy-contact-feedback');
+          if (feedback) {
+            feedback.style.display = 'block';
+            setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+          }
+        }).catch(err => {
+          alert('Failed to copy text. Please select and copy manually.');
+        });
+      });
     });
   }
 
